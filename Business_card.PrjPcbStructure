@@ -1,0 +1,4 @@
+Record=TopLevelDocument|FileName=BAT.SchDoc|SheetNumber=3
+Record=NoMainPathDocument|SourceDocument=BAT.SchDoc|FileName=MCU.SchDoc|SheetNumber=4
+Record=NoMainPathDocument|SourceDocument=BAT.SchDoc|FileName=PWR.SchDoc|SheetNumber=1
+Record=NoMainPathDocument|SourceDocument=BAT.SchDoc|FileName=SCREEN.SchDoc|SheetNumber=2

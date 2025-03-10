@@ -23,11 +23,13 @@
 /* USER CODE BEGIN Includes */
 #include "st7735.h"
 #include "softspi.h"
+#include "gdm.h"
+#include "screen_management.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
+extern enum device_mode current_mode;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -43,6 +45,8 @@
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
 
+TIM_HandleTypeDef htim1;
+
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
@@ -55,90 +59,22 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_ADC1_Init(void);
+static void MX_TIM1_Init(void);
 /* USER CODE BEGIN PFP */
-
+uint16_t ADC_VAL = 0;
+int index = 0;
+int bat_percentage_array[5] = {0};
+long map(long x, long in_min, long in_max, long out_min, long out_max)
+{
+  return (x - in_min) * (out_max - out_min + 1) / (in_max - in_min + 1) + out_min;
+}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void init() {
-    ST7735_Init();
-
-}
-
-void loop() {
-    // Check border
-    ST7735_FillScreen(ST7735_BLACK);
-
-    for(int x = 0; x < ST7735_WIDTH; x++) {
-        ST7735_DrawPixel(x, 0, ST7735_RED);
-        ST7735_DrawPixel(x, ST7735_HEIGHT-1, ST7735_RED);
-    }
-
-    for(int y = 0; y < ST7735_HEIGHT; y++) {
-        ST7735_DrawPixel(0, y, ST7735_RED);
-        ST7735_DrawPixel(ST7735_WIDTH-1, y, ST7735_RED);
-    }
-
-    HAL_Delay(3000);
-
-    // Check fonts
-    ST7735_FillScreen(ST7735_BLACK);
-    ST7735_WriteString(0, 0, "Font_7x10, red on black, lorem ipsum dolor sit amet", Font_7x10, ST7735_RED, ST7735_BLACK);
-    ST7735_WriteString(0, 3*10, "Font_11x18, green, lorem ipsum", Font_11x18, ST7735_GREEN, ST7735_BLACK);
-    ST7735_WriteString(0, 3*10+3*18, "Font_16x26", Font_16x26, ST7735_BLUE, ST7735_BLACK);
-    HAL_Delay(2000);
-
-    // Check colors
-    ST7735_FillScreen(ST7735_BLACK);
-    ST7735_WriteString(0, 0, "BLACK", Font_11x18, ST7735_WHITE, ST7735_BLACK);
-    HAL_Delay(500);
-
-    ST7735_FillScreen(ST7735_BLUE);
-    ST7735_WriteString(0, 0, "BLUE", Font_11x18, ST7735_BLACK, ST7735_BLUE);
-    HAL_Delay(500);
-
-    ST7735_FillScreen(ST7735_RED);
-    ST7735_WriteString(0, 0, "RED", Font_11x18, ST7735_BLACK, ST7735_RED);
-    HAL_Delay(500);
-
-    ST7735_FillScreen(ST7735_GREEN);
-    ST7735_WriteString(0, 0, "GREEN", Font_11x18, ST7735_BLACK, ST7735_GREEN);
-    HAL_Delay(500);
-
-    ST7735_FillScreen(ST7735_CYAN);
-    ST7735_WriteString(0, 0, "CYAN", Font_11x18, ST7735_BLACK, ST7735_CYAN);
-    HAL_Delay(500);
-
-    ST7735_FillScreen(ST7735_MAGENTA);
-    ST7735_WriteString(0, 0, "MAGENTA", Font_11x18, ST7735_BLACK, ST7735_MAGENTA);
-    HAL_Delay(500);
-
-    ST7735_FillScreen(ST7735_YELLOW);
-    ST7735_WriteString(0, 0, "YELLOW", Font_11x18, ST7735_BLACK, ST7735_YELLOW);
-    HAL_Delay(500);
-
-    ST7735_FillScreen(ST7735_WHITE);
-    ST7735_WriteString(0, 0, "WHITE", Font_11x18, ST7735_BLACK, ST7735_WHITE);
-    HAL_Delay(500);
-
-#ifdef ST7735_IS_128X128
-    // Display test image 128x128
-/*
-    // Display test image 128x128 pixel by pixel
-    for(int x = 0; x < ST7735_WIDTH; x++) {
-        for(int y = 0; y < ST7735_HEIGHT; y++) {
-            uint16_t color565 = test_img_128x128[y][x];
-            // fix endiness
-            color565 = ((color565 & 0xFF00) >> 8) | ((color565 & 0xFF) << 8);
-            ST7735_DrawPixel(x, y, color565);
-        }
-    }
-*/
-    HAL_Delay(15000);
-#endif // ST7735_IS_128X128
-
-}
+//#define ST7735_IS_160X128 1
+//#define ST7735_WIDTH  128
+//#define ST7735_HEIGHT 160
 /* USER CODE END 0 */
 
 /**
@@ -172,15 +108,16 @@ int main(void)
   MX_GPIO_Init();
   MX_USART1_UART_Init();
   MX_ADC1_Init();
+  MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
-  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, 1);
-  HAL_GPIO_WritePin(PERIPH_EN_GPIO_Port, PERIPH_EN_Pin, 0);
 
+
+  HAL_GPIO_WritePin(BAT_MEAS_GPIO_Port, BAT_MEAS_Pin, 1);
+  GoToMode(ACTIVE);
   SoftSPI_Init(&SoftSPIx);
-
-  init();
-
-  ST7735_FillScreen(ST7735_BLACK);
+  ScreenInit();
+  ScreenDrawTheme();
+  HAL_TIM_Base_Start_IT(&htim1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -288,6 +225,52 @@ static void MX_ADC1_Init(void)
 }
 
 /**
+  * @brief TIM1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM1_Init(void)
+{
+
+  /* USER CODE BEGIN TIM1_Init 0 */
+
+  /* USER CODE END TIM1_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM1_Init 1 */
+
+  /* USER CODE END TIM1_Init 1 */
+  htim1.Instance = TIM1;
+  htim1.Init.Prescaler = 1023;
+  htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim1.Init.Period = 62499;
+  htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim1.Init.RepetitionCounter = 0;
+  htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim1, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim1, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM1_Init 2 */
+
+  /* USER CODE END TIM1_Init 2 */
+
+}
+
+/**
   * @brief USART1 Initialization Function
   * @param None
   * @retval None
@@ -360,10 +343,17 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PERIPH_EN_Pin CS_Pin RESET_Pin A0_Pin
-                           LED_Pin SOFT_SPI_SCK_Pin SOFT_SPI_SDA_Pin */
-  GPIO_InitStruct.Pin = PERIPH_EN_Pin|CS_Pin|RESET_Pin|A0_Pin
-                          |LED_Pin|SOFT_SPI_SCK_Pin|SOFT_SPI_SDA_Pin;
+  /*Configure GPIO pin : PERIPH_EN_Pin */
+  GPIO_InitStruct.Pin = PERIPH_EN_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(PERIPH_EN_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : CS_Pin RESET_Pin A0_Pin LED_Pin
+                           SOFT_SPI_SCK_Pin SOFT_SPI_SDA_Pin */
+  GPIO_InitStruct.Pin = CS_Pin|RESET_Pin|A0_Pin|LED_Pin
+                          |SOFT_SPI_SCK_Pin|SOFT_SPI_SDA_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -395,15 +385,49 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-  if(GPIO_Pin == BTN_1_Pin){
 
-  } else if (GPIO_Pin == BTN_2_Pin){
-
-  } else if (GPIO_Pin == BTN_3_Pin){
-
+  if (GPIO_Pin == BTN_3_Pin){
+	  if (current_mode == IDLE){
+		  SystemClock_Config();
+		  HAL_ResumeTick();
+		  GoToMode(ACTIVE);
+		  HAL_PWR_DisableSleepOnExit();
+		  HAL_TIM_Base_Start_IT(&htim1);
+	  }
   } else if (GPIO_Pin == BTN_4_Pin){
-
+	  if (current_mode == ACTIVE){
+		  GoToMode(IDLE);
+		  HAL_SuspendTick();
+		  HAL_PWR_EnableSleepOnExit();
+		  HAL_TIM_Base_Stop_IT(&htim1);
+	  }
   }
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
+	if (htim == &htim1){
+	  int percent = 0;
+
+	  HAL_ADC_Start(&hadc1);
+	  HAL_ADC_PollForConversion(&hadc1, 100);
+	  ADC_VAL = HAL_ADC_GetValue(&hadc1);
+	  HAL_ADC_Stop(&hadc1);
+	  percent = map(ADC_VAL, 0, 1600, 0, 100);
+
+	  if (index != 4){
+		  bat_percentage_array[index++] = percent;
+	  } else {
+		  int average = 0;
+
+		  for (int i = 0; i < 4; i++){
+			  average = average + bat_percentage_array[i];
+			  bat_percentage_array[i] = 0;
+		  }
+		  average = average / 4;
+		  ScreenShowBattery(average);
+		  index = 0;
+	  }
+	}
 }
 /* USER CODE END 4 */
 

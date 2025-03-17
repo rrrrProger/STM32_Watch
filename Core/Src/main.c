@@ -25,11 +25,14 @@
 #include "softspi.h"
 #include "gdm.h"
 #include "screen_management.h"
+#include "ff.h"
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 extern enum device_mode current_mode;
+extern uint16_t brat_funny[128][128];
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -45,13 +48,15 @@ extern enum device_mode current_mode;
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
 
+SPI_HandleTypeDef hspi1;
+
 TIM_HandleTypeDef htim1;
 
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 SoftSPI_TypeDef SoftSPIx = {SOFT_SPI_SCK_GPIO_Port, SOFT_SPI_SCK_Pin, SOFT_SPI_SDA_GPIO_Port, SOFT_SPI_SDA_Pin, CS_GPIO_Port, CS_Pin, 1};
-
+FATFS fs;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -60,6 +65,7 @@ static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_TIM1_Init(void);
+static void MX_SPI1_Init(void);
 /* USER CODE BEGIN PFP */
 uint16_t ADC_VAL = 0;
 int index = 0;
@@ -72,9 +78,6 @@ long map(long x, long in_min, long in_max, long out_min, long out_max)
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-//#define ST7735_IS_160X128 1
-//#define ST7735_WIDTH  128
-//#define ST7735_HEIGHT 160
 /* USER CODE END 0 */
 
 /**
@@ -109,6 +112,7 @@ int main(void)
   MX_USART1_UART_Init();
   MX_ADC1_Init();
   MX_TIM1_Init();
+  MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
 
 
@@ -117,7 +121,16 @@ int main(void)
   SoftSPI_Init(&SoftSPIx);
   ScreenInit();
   ScreenDrawTheme();
+  for(int x = 0; x < 128; x++) {
+	  for(int y = 0; y < 128; y++) {
+		  uint16_t color565 = brat_funny[y][x];
+		  // fix endiness
+		  color565 = ((color565 & 0xFF00) >> 8) | ((color565 & 0xFF) << 8);
+		  ST7735_DrawPixel(x, y, color565);
+	  }
+  }
   HAL_TIM_Base_Start_IT(&htim1);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -225,6 +238,44 @@ static void MX_ADC1_Init(void)
 }
 
 /**
+  * @brief SPI1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SPI1_Init(void)
+{
+
+  /* USER CODE BEGIN SPI1_Init 0 */
+
+  /* USER CODE END SPI1_Init 0 */
+
+  /* USER CODE BEGIN SPI1_Init 1 */
+
+  /* USER CODE END SPI1_Init 1 */
+  /* SPI1 parameter configuration*/
+  hspi1.Instance = SPI1;
+  hspi1.Init.Mode = SPI_MODE_MASTER;
+  hspi1.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi1.Init.NSS = SPI_NSS_SOFT;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
+  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi1.Init.CRCPolynomial = 10;
+  if (HAL_SPI_Init(&hspi1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SPI1_Init 2 */
+
+  /* USER CODE END SPI1_Init 2 */
+
+}
+
+/**
   * @brief TIM1 Initialization Function
   * @param None
   * @retval None
@@ -243,7 +294,7 @@ static void MX_TIM1_Init(void)
 
   /* USER CODE END TIM1_Init 1 */
   htim1.Instance = TIM1;
-  htim1.Init.Prescaler = 1023;
+  htim1.Init.Prescaler = 511;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim1.Init.Period = 62499;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;

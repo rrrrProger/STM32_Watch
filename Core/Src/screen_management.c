@@ -52,7 +52,6 @@ void ScreenDrawTheme(){
 
 void ScreenDrawGreeting(){
 	ST7735_FillScreen(ST7735_BLACK);
-	ST7735_WriteString(0, 0, "Hi there! I want to introduce myself and tell my story.", Font_11x18, ST7735_WHITE, ST7735_BLACK);
 	HAL_Delay(5000);
 	ST7735_FillScreen(ST7735_BLACK);
 }
@@ -69,7 +68,7 @@ void ScreenShowBattery(int val){
 	str[2] = '%';
 	str[3] = '\0';
 
-	ST7735_WriteString(100, 5, str, Font_7x10, ST7735_RED, ST7735_BLACK);
+	ST7735_WriteString(100, 5, str, Font_7x10, ST7735_RED, ST7735_BLACK, ST7735_WIDTH, ST7735_HEIGHT);
 }
 
 void ScreenDrawImage(const uint16_t image[IMAGE_HEIGHT][IMAGE_WIDTH], int x_offset, int y_offset){
@@ -86,25 +85,31 @@ void ScreenDrawImage(const uint16_t image[IMAGE_HEIGHT][IMAGE_WIDTH], int x_offs
 void ScreenShowAbout(void){
 	ST7735_FillScreen(ST7735_WHITE);
 
-	ST7735_WriteString(10, 5, "About me", Font_11x18, ST7735_BLACK, ST7735_WHITE);
+	ST7735_WriteString(10, 5, "About me", Font_11x18, ST7735_BLACK, ST7735_WHITE, ST7735_WIDTH, ST7735_HEIGHT);
 
+	ScreenDrawImage(image0, 68, 30);
 
+	ST7735_WriteString(10, 30, "I am a passionate scientist, father, engineer.", Font_7x10, ST7735_BLACK, ST7735_WHITE, 60, 100);
+	ST7735_WriteString(10, 95, "I came from Ukraine, live and work in Italy.", Font_7x10, ST7735_BLACK, ST7735_WHITE, 60, ST7735_HEIGHT);
+
+	ST7735_FillRectangle(68, 95, 60, 20, ST7735_BLUE);
+	ST7735_FillRectangle(68, 115, 60, 20, ST7735_YELLOW);
 }
 
 void ScreenShowContactInfo(void) {
 	ST7735_FillScreen(ST7735_WHITE);
 
-	ST7735_WriteString(10, 5, "Contact", Font_11x18, ST7735_BLACK, ST7735_WHITE);
+	ST7735_WriteString(10, 5, "Contact", Font_11x18, ST7735_BLACK, ST7735_WHITE, ST7735_WIDTH, ST7735_HEIGHT);
 }
 
 void ScreenShowEducation(void) {
 	ST7735_FillScreen(ST7735_WHITE);
 
-	ST7735_WriteString(10, 5, "Education", Font_11x18, ST7735_BLACK, ST7735_WHITE);
+	ST7735_WriteString(10, 5, "Education", Font_11x18, ST7735_BLACK, ST7735_WHITE, ST7735_WIDTH, ST7735_HEIGHT);
 }
 
 void ScreenShowExperience(void) {
 	ST7735_FillScreen(ST7735_WHITE);
 
-	ST7735_WriteString(10, 5, "Experience", Font_11x18, ST7735_BLACK, ST7735_WHITE);
+	ST7735_WriteString(10, 5, "Experience", Font_11x18, ST7735_BLACK, ST7735_WHITE, ST7735_WIDTH, ST7735_HEIGHT);
 }

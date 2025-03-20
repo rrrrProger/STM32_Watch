@@ -39,7 +39,7 @@ int screen = MAIN_MENU;
 
 static void _displayObject(struct menu_obj *obj, uint16_t clr_block, uint16_t clr_text){
 	ST7735_FillRectangle(obj->x, obj->y, menu_width, menu_height, clr_block);
-	ST7735_WriteString(obj->x + 1, obj->y + 5, obj->name, Font_7x10, clr_text, clr_block);
+	ST7735_WriteString(obj->x + 1, obj->y + 5, obj->name, Font_7x10, clr_text, clr_block, ST7735_WIDTH, ST7735_HEIGHT);
 }
 
 void ShowStartMenu(){

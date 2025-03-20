@@ -220,14 +220,14 @@ static void ST7735_WriteChar(uint16_t x, uint16_t y, char ch, FontDef font, uint
 }
 */
 
-void ST7735_WriteString(uint16_t x, uint16_t y, const char* str, FontDef font, uint16_t color, uint16_t bgcolor) {
+void ST7735_WriteString(uint16_t x, uint16_t y, const char* str, FontDef font, uint16_t color, uint16_t bgcolor, uint16_t max_width, uint16_t max_height) {
     ST7735_Select();
 
     while(*str) {
-        if(x + font.width >= ST7735_WIDTH) {
+        if(x + font.width >= max_width) {
             x = 0;
             y += font.height;
-            if(y + font.height >= ST7735_HEIGHT) {
+            if(y + font.height >= max_height) {
                 break;
             }
 

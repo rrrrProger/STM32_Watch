@@ -16,6 +16,7 @@ void ScreenDrawGreeting(void);
 void ScreenShowHomeTown(void);
 void ScreenShowBattery(int val);
 void ScreenDrawImage(const uint16_t image[IMAGE_HEIGHT][IMAGE_WIDTH], int x_offset, int y_offset);
+void ScreenDrawLogo(const uint16_t image[64][64], int x_offset, int y_offset);
 void ScreenShowAbout(void);
 void ScreenShowContactInfo(void);
 void ScreenShowEducation(void);

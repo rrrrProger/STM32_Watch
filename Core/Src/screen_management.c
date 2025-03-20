@@ -14,6 +14,7 @@ extern uint16_t image1[IMAGE_WIDTH][IMAGE_HEIGHT];
 extern uint16_t image0[IMAGE_WIDTH][IMAGE_HEIGHT];
 extern uint16_t image2[IMAGE_WIDTH][IMAGE_HEIGHT];
 extern uint16_t image3[IMAGE_WIDTH][IMAGE_HEIGHT];
+extern uint16_t logo[64][64];
 
 static char __digitToChar(int dig){
 	switch(dig){
@@ -82,6 +83,17 @@ void ScreenDrawImage(const uint16_t image[IMAGE_HEIGHT][IMAGE_WIDTH], int x_offs
 	}
 }
 
+void ScreenDrawLogo(const uint16_t image[64][64], int x_offset, int y_offset){
+	for(int x = 0; x < 64; x++) {
+		  for(int y = 0; y < 64; y++) {
+			  uint16_t color565 = image[y][x];
+			  // fix endiness
+			  color565 = ((color565 & 0xFF00) >> 8) | ((color565 & 0xFF) << 8);
+			  ST7735_DrawPixel(x + x_offset, y + y_offset, color565);
+		  }
+		}
+}
+
 void ScreenShowAbout(void){
 	ST7735_FillScreen(ST7735_WHITE);
 
@@ -97,9 +109,20 @@ void ScreenShowAbout(void){
 }
 
 void ScreenShowContactInfo(void) {
+	int start_offset = 55;
+
 	ST7735_FillScreen(ST7735_WHITE);
 
-	ST7735_WriteString(10, 5, "Contact", Font_11x18, ST7735_BLACK, ST7735_WHITE, ST7735_WIDTH, ST7735_HEIGHT);
+	ScreenDrawLogo(logo, 0, 0);
+
+	ST7735_WriteString(20, 5, "Contact", Font_11x18, ST7735_BLACK, ST7735_WHITE, ST7735_WIDTH, ST7735_HEIGHT);
+
+	ST7735_WriteString(0, start_offset, "Andrii Tsymbaliuk SRF Surface Treatments Scientist", Font_7x10, ST7735_BLUE, ST7735_WHITE, ST7735_WIDTH, ST7735_HEIGHT);
+	ST7735_WriteString(0, start_offset + 35, "Via Vicenza, 113", Font_7x10, ST7735_BLUE, ST7735_WHITE, ST7735_WIDTH, ST7735_HEIGHT);
+	ST7735_WriteString(0, start_offset + 45, "36015 SCHIO (VI)", Font_7x10, ST7735_BLUE, ST7735_WHITE, ST7735_WIDTH, ST7735_HEIGHT);
+	ST7735_WriteString(0, start_offset + 55, "Tel:+3904451742870", Font_7x10, ST7735_BLUE, ST7735_WHITE, ST7735_WIDTH, ST7735_HEIGHT);
+	ST7735_WriteString(0, start_offset + 65, "Mob:+393458890818", Font_7x10, ST7735_BLUE, ST7735_WHITE, ST7735_WIDTH, ST7735_HEIGHT);
+	ST7735_WriteString(0, start_offset + 75, "andrii.tsymbaliuk@zanonresearch.com", Font_7x10, ST7735_BLUE, ST7735_WHITE, ST7735_WIDTH, ST7735_HEIGHT);
 }
 
 void ScreenShowEducation(void) {

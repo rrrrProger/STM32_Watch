@@ -27,12 +27,13 @@
 #include "screen_management.h"
 #include "ff.h"
 #include <stdio.h>
+#include "images.h"
+#include "menu.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 extern enum device_mode current_mode;
-extern uint16_t brat_funny[128][128];
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -67,6 +68,8 @@ static void MX_ADC1_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_SPI1_Init(void);
 /* USER CODE BEGIN PFP */
+int x_off = 70;
+int y_off = 30;
 uint16_t ADC_VAL = 0;
 int index = 0;
 int bat_percentage_array[5] = {0};
@@ -121,15 +124,8 @@ int main(void)
   SoftSPI_Init(&SoftSPIx);
   ScreenInit();
   ScreenDrawTheme();
-  for(int x = 0; x < 128; x++) {
-	  for(int y = 0; y < 128; y++) {
-		  uint16_t color565 = brat_funny[y][x];
-		  // fix endiness
-		  color565 = ((color565 & 0xFF00) >> 8) | ((color565 & 0xFF) << 8);
-		  ST7735_DrawPixel(x, y, color565);
-	  }
-  }
-  HAL_TIM_Base_Start_IT(&htim1);
+
+  ShowStartMenu();
 
   /* USER CODE END 2 */
 
@@ -438,6 +434,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 
   if (GPIO_Pin == BTN_3_Pin){
+	  for (int i = 0; i < 1000000; i++){
+		  asm("nop");
+	  }
+	  SelectMenu();
+	  /*
 	  if (current_mode == IDLE){
 		  SystemClock_Config();
 		  HAL_ResumeTick();
@@ -445,12 +446,19 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		  HAL_PWR_DisableSleepOnExit();
 		  HAL_TIM_Base_Start_IT(&htim1);
 	  }
+	  */
   } else if (GPIO_Pin == BTN_4_Pin){
+	  /*
 	  if (current_mode == ACTIVE){
 		  GoToMode(IDLE);
 		  HAL_SuspendTick();
 		  HAL_PWR_EnableSleepOnExit();
 		  HAL_TIM_Base_Stop_IT(&htim1);
+	  }
+	  */
+	  IncrementMenu();
+	  for (int i = 0; i < 100000; i++){
+		  asm("nop");
 	  }
   }
 }

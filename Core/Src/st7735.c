@@ -6,6 +6,8 @@
 
 #define DELAY 0x80
 
+bool screen_drawing = false;
+
 // based on Adafruit ST7735 library for Arduino
 static const uint8_t
   init_cmds1[] = {            // Init for 7735R, part 1 (red or green tab)
@@ -90,6 +92,7 @@ static void ST7735_Select() {
 }
 
 void ST7735_Unselect() {
+	screen_drawing = false;
     HAL_GPIO_WritePin(ST7735_CS_GPIO_Port, ST7735_CS_Pin, GPIO_PIN_SET);
 }
 
@@ -106,9 +109,15 @@ static void ST7735_WriteCommand(uint8_t cmd) {
 }
 
 static void ST7735_WriteData(uint8_t* buff, size_t buff_size) {
+	while(screen_drawing);
+
+	screen_drawing = true;
+
     HAL_GPIO_WritePin(ST7735_DC_GPIO_Port, ST7735_DC_Pin, GPIO_PIN_SET);
 
     SoftSPI_WriteReadBuff(&ST7735_SPI_PORT, buff, NULL, buff_size);
+
+    screen_drawing = false;
 }
 
 static void ST7735_ExecuteCommandList(const uint8_t *addr) {

@@ -23,12 +23,15 @@ struct menu_obj {
 	void (*showScreen)(void);
 };
 
+
 struct menu_obj about = {"About me", 10, 20, ScreenShowAbout};
 struct menu_obj contact = {"Contact", 10, 50, ScreenShowContactInfo};
 struct menu_obj education = {"Education", 10, 80, ScreenShowEducation};
 struct menu_obj experience = {"Experience", 10, 110, ScreenShowExperience};
 
 struct menu_obj *menu[] = {&about, &contact, &education, &experience};
+
+
 
 int menu_width = 80;
 int menu_height = 20;

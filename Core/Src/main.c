@@ -31,7 +31,7 @@
 #include "menu.h"
 /* USER CODE END Includes */
 
-/* Private typedef -----------------------------------------------------------*/
+/* Private typedef -----------------------------s------------------------------*/
 /* USER CODE BEGIN PTD */
 extern enum device_mode current_mode;
 /* USER CODE END PTD */

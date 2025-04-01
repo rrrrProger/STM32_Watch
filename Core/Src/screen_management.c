@@ -16,6 +16,24 @@ extern uint16_t image2[IMAGE_WIDTH][IMAGE_HEIGHT];
 extern uint16_t image3[IMAGE_WIDTH][IMAGE_HEIGHT];
 extern uint16_t logo[64][64];
 
+struct punkt_obj {
+	char text[100];
+	int x;
+	int y;
+	int max_width;
+	int max_height;
+};
+
+struct punkt_obj edu_kpi0 = {"Bachelor in Chemical Technology", 0, 24, 64, ST7735_HEIGHT};
+struct punkt_obj edu_kpi = {"Master in Chemical Technology", 0, 70, 64, ST7735_HEIGHT};
+struct punkt_obj edu_lnr = {"PhD in Physics", 0, 115, ST7735_WIDTH, ST7735_HEIGHT};
+
+struct punkt_obj work_kpi = {"INFN LNL", 0, 30, 64, ST7735_HEIGHT};
+struct punkt_obj work_lnr = {"Zanon R&I", 0, 45, ST7735_WIDTH, ST7735_HEIGHT};
+
+struct punkt_obj *edu_pnts[] = {&edu_kpi0, &edu_kpi, &edu_lnr};
+struct punkt_obj *work_pnts[] = {&work_kpi, &work_lnr};
+
 static char __digitToChar(int dig){
 	switch(dig){
 	case 0:
@@ -113,7 +131,7 @@ void ScreenShowContactInfo(void) {
 
 	ST7735_FillScreen(ST7735_WHITE);
 
-	ScreenDrawLogo(logo, 0, 0);
+	ScreenDrawLogo(logo, 0, 10);
 
 	ST7735_WriteString(20, 5, "Contact", Font_11x18, ST7735_BLACK, ST7735_WHITE, ST7735_WIDTH, ST7735_HEIGHT);
 
@@ -129,10 +147,26 @@ void ScreenShowEducation(void) {
 	ST7735_FillScreen(ST7735_WHITE);
 
 	ST7735_WriteString(10, 5, "Education", Font_11x18, ST7735_BLACK, ST7735_WHITE, ST7735_WIDTH, ST7735_HEIGHT);
+	ScreenDrawImage(image1, 68, 30);
+
+	for (int i = 0; i < sizeof(edu_pnts) / sizeof(edu_pnts[0]); i++){
+		struct punkt_obj *obj = edu_pnts[i];
+
+		ST7735_FillRectangle(obj->x, obj->y, 5, 5, ST7735_RED);
+		ST7735_WriteString(obj->x + 5, obj->y, obj->text, Font_7x10, ST7735_BLACK, ST7735_WHITE, obj->max_width, obj->max_height);
+	}
 }
 
 void ScreenShowExperience(void) {
 	ST7735_FillScreen(ST7735_WHITE);
 
 	ST7735_WriteString(10, 5, "Experience", Font_11x18, ST7735_BLACK, ST7735_WHITE, ST7735_WIDTH, ST7735_HEIGHT);
+	ScreenDrawImage(image3, 68, 30);
+
+	for (int i = 0; i < 2; i++){
+		struct punkt_obj *obj = work_pnts[i];
+
+		ST7735_FillRectangle(obj->x, obj->y, 5, 5, ST7735_BLUE);
+		ST7735_WriteString(obj->x + 5, obj->y, obj->text, Font_7x10, ST7735_BLACK, ST7735_WHITE, obj->max_width, obj->max_height);
+	}
 }
